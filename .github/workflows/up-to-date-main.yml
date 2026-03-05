@@ -5,9 +5,14 @@ name: Require latest main commit
 # Define quando o workflow será executado
 # Neste caso ele roda sempre que um Pull Request for criado ou atualizado
 on:
+  # 1) Roda sempre que houver qualquer atualização (push) em qualquer branch
+  push:
+    branches: ["**"]  # todas as branches (inclui main)
+
+  # 2) (Opcional, mas recomendado) Roda também quando abrir/atualizar PR
   pull_request:
-    # O workflow só será executado se o PR estiver tentando entrar na branch "main"
-    branches: ["main"]
+    branches: ["main"]  # valida PRs que tentam entrar na main
+
 
 # Define os jobs (tarefas principais) que o workflow irá executar
 jobs:
@@ -141,3 +146,4 @@ jobs:
 
 
           # teste error
+          
