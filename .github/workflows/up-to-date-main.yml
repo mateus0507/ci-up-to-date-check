@@ -65,3 +65,5 @@ jobs:
 
           echo "✅ OK: Sua branch contém o último commit da main."
           echo "Agora você pode alterar o que quiser e commitar por cima (ex: virar commit 11)."
+
+        # ver se sobe
