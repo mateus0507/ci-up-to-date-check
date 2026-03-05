@@ -138,9 +138,3 @@ jobs:
           # Se passou na verificação, significa que a branch do PR contém o último commit da main
           echo "✅ OK: Sua branch contém o último commit da main."
           echo "Agora você pode alterar o que quiser e commitar por cima (ex: virar commit 11)."
-
-
-# Comentários de controle / testes locais
-# ver se sobe
-# ultimo teste 2
-# mais um teste
