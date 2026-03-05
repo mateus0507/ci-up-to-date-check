@@ -77,3 +77,4 @@ jobs: #defini os trabalhos que essa pipeline vai executar
           # Se chegou aqui, a branch do PR já contém o último commit da main
           echo "✅ OK: sua branch contém o último commit da main."
 
+ #sobe
