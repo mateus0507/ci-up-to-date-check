@@ -44,7 +44,7 @@ jobs:
           # Isso é necessário porque o comando git merge-base precisa do histórico completo
           fetch-depth: 0
 
-
+    
       # =========================================================
       # PASSO 2 - Buscar a branch main do repositório remoto
       # =========================================================
@@ -147,3 +147,5 @@ jobs:
 
           # teste error
           
+
+          #1
