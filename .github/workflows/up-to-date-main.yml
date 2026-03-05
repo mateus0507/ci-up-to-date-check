@@ -5,10 +5,19 @@ name: Require latest main commit
 # Define quando o workflow será executado
 # Neste caso ele roda sempre que um Pull Request for criado ou atualizado
 
+# Eventos que disparam o workflow
 on:
+
+  # Executa quando houver push em qualquer branch
+  # EXCETO na main
+  push:
+    branches-ignore:
+      - main
+
+  # Executa quando um Pull Request tentar entrar na main
   pull_request:
     branches:
-      - '*'
+      - main
 # on:
 #   pull_request:
 #     # O workflow só será executado se o PR estiver tentando entrar na branch "main"
