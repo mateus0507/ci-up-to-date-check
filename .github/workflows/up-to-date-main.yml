@@ -8,7 +8,7 @@ on:
   # 1) Roda sempre que houver qualquer atualização (push) em qualquer branch
   push:
     branches:
-      - "**"  # todas as branches (inclui main)
+      - '**' # todas as branches (inclui main)
 
   # # 2) (Opcional, mas recomendado) Roda também quando abrir/atualizar PR
   # pull_request:
