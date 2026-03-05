@@ -1,70 +1,145 @@
-name: Require latest main commit #nome do workflow (o check vai aparecer assim no PR)
+# Nome do workflow que aparecerá na aba "Actions" do GitHub
+# Esse nome também aparece como check quando alguém abre um Pull Request
+name: Require latest main commit
 
-# Esse workflow roda quando um Pull Request for aberto/atualizado apontando para a branch main
+# Define quando o workflow será executado
+# Neste caso ele roda sempre que um Pull Request for criado ou atualizado
 on:
   pull_request:
-    branches: ["main"] #só roda em PRs que tentam entrar na main
+    # O workflow só será executado se o PR estiver tentando entrar na branch "main"
+    branches: ["main"]
 
+# Define os jobs (tarefas principais) que o workflow irá executar
 jobs:
+
+  # Identificador interno do job
   up_to_date:
-    name: up-to-date-main #nome do job (esse é o "status check" que você vai marcar como obrigatório)
+
+    # Nome exibido no GitHub Actions para este job
+    # Esse é o nome do "status check" que pode ser marcado como obrigatório na branch protection
+    name: up-to-date-main
+
+    # Define o sistema operacional da máquina (runner) que executará o job
+    # O GitHub cria uma máquina virtual temporária com Ubuntu
     runs-on: ubuntu-latest
 
+    # Lista de passos que o job irá executar em sequência
     steps:
-      # 1) Faz checkout do código do PR (a branch do dev)
-      # fetch-depth: 0 = histórico completo, necessário para git merge-base funcionar corretamente
+
+      # =========================================================
+      # PASSO 1 - Fazer checkout do código do Pull Request
+      # =========================================================
+
+      # Faz o download (clone) do código do PR para a máquina do GitHub Actions
+      # Isso permite que os comandos git rodem sobre o repositório
       - name: Checkout PR branch
         uses: actions/checkout@v4
         with:
+          # fetch-depth: 0 baixa todo o histórico do Git
+          # Isso é necessário porque o comando git merge-base precisa do histórico completo
           fetch-depth: 0
 
-      # 2) Busca a branch main do remoto e garante que a referência origin/main exista no runner
-      # Isso evita o erro: "fatal: ambiguous argument 'origin/main'"
+
+      # =========================================================
+      # PASSO 2 - Buscar a branch main do repositório remoto
+      # =========================================================
+
+      # Esse passo garante que a referência origin/main exista no runner
+      # Sem isso podem ocorrer erros como:
+      # "fatal: ambiguous argument 'origin/main'"
       - name: Fetch main reference
         run: |
-          # --no-tags: não baixa tags (mais rápido)
-          # --prune: limpa refs antigas
-          # +refs/heads/main:refs/remotes/origin/main:
-          #   baixa a main do remoto e salva exatamente como origin/main
+          # git fetch baixa atualizações do repositório remoto sem alterar o código local
+
+          # --no-tags
+          # não baixa tags do repositório, deixando o comando mais rápido
+          
+          # --prune
+          # remove referências remotas antigas que já foram deletadas no repositório
+          
+          # +refs/heads/main:refs/remotes/origin/main
+          # baixa a branch main do remoto e salva exatamente como origin/main
+          # isso garante que podemos comparar HEAD com origin/main
           git fetch --no-tags --prune origin +refs/heads/main:refs/remotes/origin/main
 
-          # confirma que origin/main existe
+          # Confirma que origin/main existe
+          # Se não existir, o workflow falhará aqui
           git rev-parse --verify origin/main
 
-      # 3) Verifica se a branch do PR contém o ÚLTIMO commit da main
-      # REGRA DA TAREFA:
-      # - main está no commit 10
-      # - PR está no commit 9 (não contém o commit 10) -> falha
-      # - PR contém o commit 10 e faz commit 11 em cima -> passa
+
+      # =========================================================
+      # PASSO 3 - Verificar se a branch do PR contém o último commit da main
+      # =========================================================
+
+      # Regra da tarefa:
+      #
+      # Exemplo:
+      #
+      # main:
+      # 8 ---- 9 ---- 10
+      #
+      # PR:
+      # 8 ---- 9
+      #
+      # Nesse caso o PR NÃO contém o commit 10 → PR deve falhar
+      #
+      # Se o PR fizer:
+      #
+      # 8 ---- 9 ---- 10 ---- 11
+      #
+      # Então o PR contém o commit 10 → PR pode passar
+      #
       - name: Block PR if branch is behind main
         run: |
+
+          # Mensagem inicial para facilitar leitura no log do GitHub Actions
           echo "=== Checking if PR branch contains the latest main commit ==="
 
-          # hash do commit mais recente da main remota (o "último commit", ex: commit 10)
+          # Obtém o hash do commit mais recente da main remota
+          # Esse é o "último commit da main" (ex: commit 10)
           main_tip=$(git rev-parse origin/main)
 
-          # merge-base = último commit em comum entre HEAD (PR) e origin/main
-          # Se a branch do PR estiver atualizada, o merge-base deve ser exatamente o main_tip
+          # merge-base encontra o último commit em comum entre duas branches
+          # HEAD = commit atual da branch do PR
+          # origin/main = commit atual da main
+          #
+          # Se o PR estiver atualizado com a main,
+          # o merge-base deve ser exatamente igual ao main_tip
           base=$(git merge-base HEAD origin/main)
 
+          # Imprime informações úteis para debug no log da pipeline
           echo "Main tip (origin/main): $main_tip"
           echo "Merge-base:             $base"
           echo "PR tip (HEAD):          $(git rev-parse HEAD)"
 
-          # Se o merge-base for diferente do tip da main, o PR NÃO inclui o último commit da main
+          # Compara o merge-base com o último commit da main
+          #
+          # Se forem diferentes:
+          # significa que a branch do PR NÃO contém o commit mais recente da main
           if [ "$base" != "$main_tip" ]; then
+
+            # Mensagem de erro que aparecerá no log do GitHub Actions
             echo "❌ BLOCKED: Sua branch NÃO contém o último commit da main."
             echo ""
             echo "Você está tentando abrir PR com a branch desatualizada (ex: main=10 e você=9)."
             echo ""
+
+            # Instruções para o desenvolvedor atualizar a branch
             echo "Como resolver:"
             echo "  Opção 1 (merge):  git fetch origin && git merge origin/main && git push"
             echo "  Opção 2 (rebase): git fetch origin && git rebase origin/main && git push --force-with-lease"
+
+            # exit 1 faz o step falhar
+            # quando o step falha, o job falha
+            # quando o job falha, o PR fica bloqueado
             exit 1
           fi
 
+          # Se passou na verificação, significa que a branch do PR contém o último commit da main
           echo "✅ OK: Sua branch contém o último commit da main."
           echo "Agora você pode alterar o que quiser e commitar por cima (ex: virar commit 11)."
 
-        # ver se sobe
-        #ultimo teste
+
+# Comentários de controle / testes locais
+# ver se sobe
+# ultimo teste 2
