@@ -1,30 +1,112 @@
+# "name"
+# É o nome do workflow (da pipeline).
+# Ele aparece na aba "Actions" do GitHub.
+# Nesse caso o nome indica que a pipeline verifica se a branch
+# possui o commit mais recente da main.
 name: Require latest main commit
 
+
+# "on"
+# Define QUANDO a pipeline será executada.
 on:
+
+  # "pull_request"
+  # Significa que o workflow roda quando um Pull Request é aberto,
+  # atualizado ou sincronizado.
   pull_request:
+
+    # "branches"
+    # Define para quais branches de DESTINO o workflow vai rodar.
+    # Ou seja, se o PR estiver tentando entrar nessas branches.
     branches:
+
+      # Se alguém fizer PR para dev, a pipeline roda.
       - dev
+
+      # Se alguém fizer PR para main, a pipeline roda.
       - main
 
+
+# "jobs"
+# Jobs são as tarefas principais da pipeline.
+# Um workflow pode ter vários jobs.
 jobs:
+
+  # "check-main-sync"
+  # É o nome interno do job.
+  # Ele representa a tarefa que vai verificar
+  # se a branch está sincronizada com a main.
   check-main-sync:
+
+    # "runs-on"
+    # Define em qual sistema operacional o job vai rodar.
+    # Aqui o GitHub cria uma máquina virtual Ubuntu
+    # para executar os comandos.
     runs-on: ubuntu-latest
 
+
+    # "steps"
+    # Steps são os passos que o job vai executar em sequência.
     steps:
+
+      # "uses"
+      # Usa uma action pronta do GitHub.
+      # Neste caso usamos a action oficial de checkout.
       - uses: actions/checkout@v4
+
         with:
+
+          # "fetch-depth"
+          # Define quantos commits do histórico serão baixados.
+          # 0 significa baixar TODO o histórico do Git.
+          # Isso é necessário porque vamos comparar commits.
           fetch-depth: 0
+
+          # "ref"
+          # Define qual commit será baixado.
+          # Aqui pegamos o commit da branch que abriu o PR.
+          # Isso garante que estamos analisando a branch real
+          # do desenvolvedor.
           ref: ${{ github.event.pull_request.head.sha }}
 
+
+      # "run"
+      # Executa um comando diretamente no terminal da máquina da pipeline.
+      # Aqui buscamos a branch main atualizada do repositório remoto.
       - run: git fetch origin main --no-tags
 
+
+      # Outro step com "run".
+      # O símbolo "|" permite escrever vários comandos shell.
       - run: |
+
+          # "MAIN"
+          # Criamos uma variável chamada MAIN.
+          # Ela guarda o SHA do último commit da main.
           MAIN=$(git rev-parse origin/main)
+
+          # "BASE"
+          # Criamos outra variável chamada BASE.
+          # Ela guarda o último commit em comum entre
+          # a branch atual e a main.
           BASE=$(git merge-base HEAD origin/main)
 
-          if [ "$MAIN" != "$BASE" ]; then
-            echo "Branch desatualizada com a main"
-            exit 1
-          fi
 
-        ###
+          # "if"
+          # Aqui fazemos uma condição.
+          # Verificamos se o commit da main é diferente do commit base.
+          if [ "$MAIN" != "$BASE" ]; then
+
+            # "echo"
+            # Apenas imprime uma mensagem no log da pipeline.
+            echo "Branch desatualizada com a main"
+
+            # "exit 1"
+            # Encerra o step com erro.
+            # Quando isso acontece o job falha.
+            # E o Pull Request pode ser bloqueado.
+            exit 1
+
+          # "fi"
+          # Fecha o bloco do if.
+          fi
