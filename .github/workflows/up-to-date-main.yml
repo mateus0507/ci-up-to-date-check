@@ -89,5 +89,8 @@ jobs:
             exit 1
           fi
 
-          # Se os SHAs forem iguais, a branch contém o commit mais recente da main
+          # Se os commits forem iguais significa que a branch contém o último commit da main
+          # Então a verificação passa com sucesso
           echo "OK: a branch contém o commit mais recente da main."
+
+          #teste
