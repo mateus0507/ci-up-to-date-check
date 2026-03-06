@@ -25,4 +25,7 @@ jobs:
           if [ "$MAIN" != "$BASE" ]; then
             echo "Branch desatualizada com a main"
             exit 1
-   #error
+          fi
+
+      #teste se vai passar o feature para o dev
+      #adicionando main um
