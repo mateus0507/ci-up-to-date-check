@@ -89,12 +89,8 @@ jobs:
             exit 1
           fi
 
-          # Se passou na verificação, significa que a branch do PR contém o último commit da main
-          echo "✅ OK: Sua branch contém o último commit da main."
-          echo "Agora você pode alterar o que quiser e commitar por cima (ex: virar commit 11)."
+          # Se os commits forem iguais significa que a branch contém o último commit da main
+          # Então a verificação passa com sucesso
+          echo "OK: a branch contém o commit mais recente da main."
 
-
-          # teste error
-          
-
-          #1
+          #teste
