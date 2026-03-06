@@ -26,4 +26,3 @@ jobs:
             echo "Branch desatualizada com a main"
             exit 1
           fi
-        #nao pode passar tambem 
