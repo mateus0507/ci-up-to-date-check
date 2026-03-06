@@ -24,14 +24,3 @@ jobs:
 
           if [ "$MAIN" != "$BASE" ]; then
             ec
-
-
-
-
-
-
-
-
-
-
-          #aqui
