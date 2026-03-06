@@ -26,4 +26,9 @@ jobs:
             echo "Branch desatualizada com a main"
             exit 1
           fi
+<<<<<<< HEAD
         #outro teste se passa, caso passe esta errado
+=======
+
+      #teste se vai passar o feature para o dev
+>>>>>>> d3a4a11269c7381881a419ff2ec9ef95b42ad57b
