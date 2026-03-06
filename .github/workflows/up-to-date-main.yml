@@ -44,13 +44,3 @@ jobs:
           fi
 
           echo "OK: a branch contém o commit mais recente da main."
-<<<<<<< HEAD
-
-          #tem que estar assim
-          #tem que aceitar a alteração agora 
-
-
-
-          #essa não pode passar
-=======
->>>>>>> ade43b5082592fe372a78838762f943c18bc2f2c
