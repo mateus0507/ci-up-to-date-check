@@ -91,3 +91,5 @@ jobs:
 
           # Se os SHAs forem iguais, a branch contém o commit mais recente da main
           echo "OK: a branch contém o commit mais recente da main."
+
+          #teste
