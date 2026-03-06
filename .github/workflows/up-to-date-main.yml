@@ -23,4 +23,8 @@ jobs:
           BASE=$(git merge-base HEAD origin/main)
 
           if [ "$MAIN" != "$BASE" ]; then
-            ec
+            echo "Branch desatualizada com a main"
+            exit 1
+          fi
+
+        #
