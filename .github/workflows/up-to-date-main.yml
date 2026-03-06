@@ -49,11 +49,13 @@ jobs:
     # Steps são os passos que o job vai executar em sequência.
     steps:
 
-      # "uses"
+      # "uses = usar uma action pronta"
       # Usa uma action pronta do GitHub.
       # Neste caso usamos a action oficial de checkout.
+      # baixar o código do repositório dentro da máquina da pipeline.
       - uses: actions/checkout@v4
 
+        # with = parâmetros de configuração para uma action
         with:
 
           # "fetch-depth"
@@ -110,4 +112,4 @@ jobs:
           # "fi"
           # Fecha o bloco do if.
           fi
-          #
+          ##
