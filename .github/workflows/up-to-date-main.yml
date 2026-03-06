@@ -1,86 +1,93 @@
 # Nome do workflow que aparecerá na aba "Actions" do GitHub
-# Esse nome também pode aparecer como status check em Pull Requests
+# Esse nome também pode aparecer como status check no Pull Request
 name: Require latest main commit
 
 # Define quando o workflow será executado
 on:
-  # O workflow roda sempre que um Pull Request for aberto, atualizado ou sincronizado
   pull_request:
+    # O workflow só roda quando o PR tiver como destino:
+    # - a branch dev
+    # - ou a branch main
+    #
+    # Exemplos que VÃO rodar:
+    # feature -> dev
+    # dev -> main
+    # feature -> main
+    #
+    # Exemplos que NÃO vão rodar:
+    # main -> dev? (na prática roda, porque o destino é dev)
+    # dev -> feature
+    # feature -> outra-branch
+    branches:
+      - dev
+      - main
 
-# Início da definição dos jobs (tarefas principais da pipeline)
+# Início da definição dos jobs da pipeline
 jobs:
 
   # Identificador interno do job
   up_to_date_with_main:
 
-    # Nome do job que aparecerá na interface do GitHub
-    # Esse nome pode ser marcado como "required status check" na proteção da branch
+    # Nome visível do job no GitHub
+    # Esse nome pode ser configurado como obrigatório nas branch protections
     name: up-to-date-main
 
-    # Define o ambiente onde o job será executado
-    # Neste caso, uma máquina virtual Ubuntu fornecida pelo GitHub
+    # Sistema operacional usado pelo runner do GitHub
     runs-on: ubuntu-latest
 
-    # Lista de passos que serão executados dentro do job
+    # Lista de etapas executadas dentro do job
     steps:
 
-      # Passo 1: Fazer checkout do código do Pull Request
+      # Etapa 1: baixa o código do PR no ambiente da pipeline
       - name: Checkout do código do PR
 
-        # Usa a action oficial do GitHub para baixar o código do repositório
+        # Action oficial do GitHub para clonar o repositório
         uses: actions/checkout@v4
 
         with:
-          # fetch-depth: 0 baixa TODO o histórico do git
-          # Isso é necessário porque vamos comparar commits entre branches
-          # Se fosse depth 1, só viria o último commit e a comparação falharia
+          # Traz o histórico completo do Git
+          # Isso é importante porque vamos comparar commits entre branches
           fetch-depth: 0
 
-      # Passo 2: Buscar a branch main do repositório remoto
+      # Etapa 2: busca a referência mais atual da main no remoto
       - name: Buscar referência da main
 
-        # git fetch baixa a referência da main do repositório remoto (origin)
-        # --no-tags evita baixar tags desnecessárias e deixa mais rápido
+        # Baixa a branch main do repositório remoto chamado origin
+        # --no-tags evita baixar tags desnecessárias
         run: git fetch origin main --no-tags
 
-      # Passo 3: Verificar se a branch do PR contém o último commit da main
+      # Etapa 3: verifica se a branch do PR contém o último commit da main
       - name: Validar se a branch contém o último commit da main
 
-        # O símbolo | permite escrever múltiplos comandos shell
+        # O | permite escrever múltiplos comandos shell
         run: |
 
-          # Pega o SHA (identificador único) do último commit da main remota
+          # Pega o SHA do commit mais recente da main remota
           MAIN_SHA=$(git rev-parse origin/main)
 
-          # Pega o commit mais recente que existe em comum entre:
-          # - a branch atual (HEAD)
-          # - a main
-          # Esse comando encontra o "ponto de origem" entre as duas branches
+          # Pega o último commit em comum entre a branch atual do PR (HEAD)
+          # e a branch main remota
           BASE_SHA=$(git merge-base HEAD origin/main)
 
-          # Mostra no log da pipeline qual é o commit atual da main
-          echo "origin/main     = $MAIN_SHA"
+          # Exibe no log o SHA atual da main
+          echo "origin/main = $MAIN_SHA"
 
-          # Mostra qual é o commit base entre a branch do PR e a main
-          echo "merge-base      = $BASE_SHA"
+          # Exibe no log o commit base em comum entre a branch do PR e a main
+          echo "merge-base  = $BASE_SHA"
 
-          # Se os commits forem diferentes significa que:
-          # a main avançou e a branch do PR não foi atualizada
+          # Se os dois SHAs forem diferentes, a branch do PR está desatualizada
+          # em relação à main
           if [ "$MAIN_SHA" != "$BASE_SHA" ]; then
 
-            # Mensagem informando que a branch está desatualizada
+            # Mensagem de erro no log
             echo "Sua branch está desatualizada em relação à main."
 
-            # Instrução para o desenvolvedor atualizar a branch
-            echo "Atualize a branch com a main antes de continuar."
+            # Orientação para atualizar a branch
+            echo "Atualize sua branch com a main antes de abrir ou concluir o PR."
 
-            # exit 1 faz o job falhar
-            # Isso impede o merge quando a branch protection estiver ativada
+            # Faz o job falhar
             exit 1
           fi
 
-          # Se os commits forem iguais significa que a branch contém o último commit da main
-          # Então a verificação passa com sucesso
+          # Se os SHAs forem iguais, a branch contém o commit mais recente da main
           echo "OK: a branch contém o commit mais recente da main."
-
-          #teste
