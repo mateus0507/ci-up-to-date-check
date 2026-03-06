@@ -1,7 +1,5 @@
-# Nome do workflow que aparecerá na aba "Actions" do GitHub
 name: Require latest main commit
 
-# Executa quando houver Pull Request para dev ou main
 on:
   pull_request:
     branches:
@@ -10,39 +8,21 @@ on:
 
 jobs:
   check-main-sync:
-    # Nome visível do job no GitHub
-    name: up-to-date-main
-
-    # Runner usado pelo GitHub
     runs-on: ubuntu-latest
 
     steps:
-      # Faz checkout do commit REAL da branch de origem do PR
-      # Isso evita validar o merge temporário do GitHub
-      - name: Checkout da branch real do PR
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha }}
 
-      # Busca a referência atual da main no remoto
-      - name: Buscar main
-        run: git fetch origin main --no-tags
+      - run: git fetch origin main --no-tags
 
-      # Compara a branch do PR com a main
-      - name: Validar se a branch contém o último commit da main
-        run: |
-          MAIN_SHA=$(git rev-parse origin/main)
-          BASE_SHA=$(git merge-base HEAD origin/main)
+      - run: |
+          MAIN=$(git rev-parse origin/main)
+          BASE=$(git merge-base HEAD origin/main)
 
-          echo "origin/main = $MAIN_SHA"
-          echo "merge-base  = $BASE_SHA"
-
-          if [ "$MAIN_SHA" != "$BASE_SHA" ]; then
-            echo "Sua branch está desatualizada em relação à main."
+          if [ "$MAIN" != "$BASE" ]; then
+            echo "Branch desatualizada com a main"
             exit 1
           fi
-
-          echo "OK: a branch contém o commit mais recente da main."
-
-        #tem que passar 
