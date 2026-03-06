@@ -1,97 +1,50 @@
 # Nome do workflow que aparecerá na aba "Actions" do GitHub
-# Esse nome também pode aparecer como status check no Pull Request
 name: Require latest main commit
 
-# Define quando o workflow será executado
+# Executa quando houver Pull Request para dev ou main
 on:
   pull_request:
-    # O workflow só roda quando o PR tiver como destino:
-    # - a branch dev
-    # - ou a branch main
-    #
-    # Exemplos que VÃO rodar:
-    # feature -> dev
-    # dev -> main
-    # feature -> main
-    #
-    # Exemplos que NÃO vão rodar:
-    # main -> dev? (na prática roda, porque o destino é dev)
-    # dev -> feature
-    # feature -> outra-branch
     branches:
       - dev
       - main
 
-# Início da definição dos jobs da pipeline
 jobs:
-
-  # Identificador interno do job
-  up_to_date_with_main:
-
+  check-main-sync:
     # Nome visível do job no GitHub
-    # Esse nome pode ser configurado como obrigatório nas branch protections
     name: up-to-date-main
 
-    # Sistema operacional usado pelo runner do GitHub
+    # Runner usado pelo GitHub
     runs-on: ubuntu-latest
 
-    # Lista de etapas executadas dentro do job
     steps:
-
-      # Etapa 1: baixa o código do PR no ambiente da pipeline
-      - name: Checkout do código do PR
-
-        # Action oficial do GitHub para clonar o repositório
+      # Faz checkout do commit REAL da branch de origem do PR
+      # Isso evita validar o merge temporário do GitHub
+      - name: Checkout da branch real do PR
         uses: actions/checkout@v4
-
         with:
-          # Traz o histórico completo do Git
-          # Isso é importante porque vamos comparar commits entre branches
           fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
 
-      # Etapa 2: busca a referência mais atual da main no remoto
-      - name: Buscar referência da main
-
-        # Baixa a branch main do repositório remoto chamado origin
-        # --no-tags evita baixar tags desnecessárias
+      # Busca a referência atual da main no remoto
+      - name: Buscar main
         run: git fetch origin main --no-tags
 
-      # Etapa 3: verifica se a branch do PR contém o último commit da main
+      # Compara a branch do PR com a main
       - name: Validar se a branch contém o último commit da main
-
-        # O | permite escrever múltiplos comandos shell
         run: |
-
-          # Pega o SHA do commit mais recente da main remota
           MAIN_SHA=$(git rev-parse origin/main)
-
-          # Pega o último commit em comum entre a branch atual do PR (HEAD)
-          # e a branch main remota
           BASE_SHA=$(git merge-base HEAD origin/main)
 
-          # Exibe no log o SHA atual da main
           echo "origin/main = $MAIN_SHA"
-
-          # Exibe no log o commit base em comum entre a branch do PR e a main
           echo "merge-base  = $BASE_SHA"
 
-          # Se os dois SHAs forem diferentes, a branch do PR está desatualizada
-          # em relação à main
           if [ "$MAIN_SHA" != "$BASE_SHA" ]; then
-
-            # Mensagem de erro no log
             echo "Sua branch está desatualizada em relação à main."
-
-            # Orientação para atualizar a branch
-            echo "Atualize sua branch com a main antes de abrir ou concluir o PR."
-
-            # Faz o job falhar
             exit 1
           fi
 
-          # Se os commits forem iguais significa que a branch contém o último commit da main
-          # Então a verificação passa com sucesso
           echo "OK: a branch contém o commit mais recente da main."
+<<<<<<< HEAD
 
           #tem que estar assim
           #tem que aceitar a alteração agora 
@@ -99,3 +52,5 @@ jobs:
 
 
           #essa não pode passar
+=======
+>>>>>>> ade43b5082592fe372a78838762f943c18bc2f2c
